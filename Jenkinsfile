@@ -12,12 +12,14 @@ pipeline {
     timeout(time: 20, unit: 'MINUTES')
   }
 
-  environment {
+  environment 
+  {
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
     PIP_NO_CACHE_DIR = '1'
   }
 
   stages {
+    
     stage('Checkout') {
       steps {
         checkout scm
