@@ -2,24 +2,25 @@
 pipeline {
   agent {
     docker {
-      image 'python:3.11-alpine'   // or 'python:3.11-slim' if you need glibc / build tools
-      args  '-u'                   // unbuffered stdout for clearer logs
+      image 'python:3.11-slim'      // use 'python:3.11-alpine' if you prefer Alpine
+      // args '<docker run args>'   // ⚠️ Do NOT put Python flags here; leave empty unless you need Docker-specific args
     }
   }
 
   options {
     timestamps()
+    disableConcurrentBuilds()
     timeout(time: 20, unit: 'MINUTES')
   }
 
-  environment 
-  {
+  environment {
+    PYTHONUNBUFFERED = '1'          // unbuffered Python output (instead of args '-u')
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
     PIP_NO_CACHE_DIR = '1'
+    SKIP_DB = '1'                   // used by your tests to skip DB
   }
 
   stages {
-    
     stage('Checkout') {
       steps {
         checkout scm
@@ -28,15 +29,19 @@ pipeline {
 
     stage('Setup Python Env') {
       steps {
-        dir('app') {                 // adjust if your code/Jenkinsfile isn't under app/
+        dir('app') {
           sh '''
+            set -e
             python --version
             python -m venv venv
             . venv/bin/activate
             pip install --upgrade pip
             if [ -f requirements.txt ]; then
               pip install -r requirements.txt
+            else
+              pip install Flask mysql-connector-python
             fi
+            pip install pytest
           '''
         }
       }
@@ -46,13 +51,9 @@ pipeline {
       steps {
         dir('app') {
           sh '''
+            set -e
             . venv/bin/activate
-            # Adjust command as needed; using pytest as an example
-            if [ -f pytest.ini ] || [ -d tests ]; then
-              pytest -q
-            else
-              python -m unittest discover -v
-            fi
+            pytest --maxfail=1 --disable-warnings -q
           '''
         }
       }
@@ -61,14 +62,20 @@ pipeline {
 
   post {
     success {
-      echo '✅ Validation passed.'
+      echo '✅ Python code validated successfully (DB skipped in CI).'
     }
     failure {
       echo '❌ Validation failed. Check the stage logs above.'
     }
     always {
-      cleanWs()
+      // Guard cleanWs to avoid "MissingContextVariableException" if node/workspace wasn't allocated
+      script {
+        try {
+          cleanWs()
+        } catch (e) {
+          echo "Skipping cleanWs(): ${e}"
+        }
+      }
     }
   }
 }
-
