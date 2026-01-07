@@ -74,21 +74,21 @@ def submit_user():
 
 @app.route('/users', methods=['GET'])
 def get_users():
-    if SKIP_DB:
+OBOBOBOB    if SKIP_DB:
         # Demo/CI mode: return empty list
-        return jsonify([])
-
+OBOB        return jsonify([])
+OBOB
     conn = mysql.connector.connect(**db_config)
-    try:
-        cursor = conn.cursor()
-        cursor.execute('SELECT id, name, email FROM users')
-        users = [{"id": row[0], "name": row[1], "email": row[2]} for row in cursor.fetchall()]
-    finally:
-        cursor.close()
-        conn.close()
-
+OB    try:
+OBOB        cursor = conn.cursor()
+OBOBOBOB        cursor.execute('SELECT id, name, email FROM users')
+OBOB        users = [{"id": row[0], "name": row[1], "email": row[2]} for row in cursor.fetchall()]
+OB    finally:
+OBOB        cursor.close()
+OBOB        conn.close()
+OBOBOB
     return jsonify(users)
 
-if __name__ == '__main__':
+OBOBif __name__ == '__main__':
     # Only for local dev runs; in production use a WSGI server
-    app.run(host='0.0.0.0', port=5000)
+OBOBOBOBOBOBOBOB    app.run(host='0.0.0.0', port=5000)
