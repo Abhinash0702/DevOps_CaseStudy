@@ -23,7 +23,7 @@ pipeline {
     // --- Add these 3 for PR auto-merge (GitHub) ---
     GITHUB_OWNER      = 'Abhinash0702'   // e.g., 'abhinash' or your GitHub org
     GITHUB_REPO       = 'DevOps_CaseStudy'          // e.g., 'my-app'
-    GITHUB_TOKEN_CRED = 'jenkins-github-access' // Jenkins credential ID (Secret text)
+    GITHUB_TOKEN_CRED = 'jenkins-github-access1' // Jenkins credential ID (Secret text)
   }
 
   stages {
