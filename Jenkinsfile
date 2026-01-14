@@ -34,16 +34,7 @@ pipeline {
     }
 
     
-stage('Install tools') {
-  steps {
-    sh '''
-      set -e
-      apt-get update -y
-      apt-get install -y --no-install-recommends curl ca-certificates
-      rm -rf /var/lib/apt/lists/*
-    '''
-  }
-}
+
 
 
     stage('Setup Python Env') {
