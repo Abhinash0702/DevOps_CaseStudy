@@ -2,7 +2,7 @@
 pipeline {
   agent {
     docker {
-      image 'python:3.11-slim'      // keep your Python Docker agent
+      image 'python:3.11-slim'      // k
       // args '<docker run args>'   // leave empty unless you need extra Docker args
     }
   }
