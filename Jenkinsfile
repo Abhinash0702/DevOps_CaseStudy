@@ -74,6 +74,9 @@ pipeline {
   post {
     success {
       echo '✅ Python code validated successfully (DB skipped in CI).'
+      echo '✅ Merge successful. Triggering deployment job...'
+      build job: 'Deploy-CaseStudy', wait: false
+
     }
     failure {
       echo '❌ Validation failed. Check the stage logs above.'
