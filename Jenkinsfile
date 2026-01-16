@@ -2,8 +2,7 @@
 pipeline {
   agent {
     docker {
-      image 'python:3.11-slim'      // use 'python:3.11-alpine' if you prefer Alpine
-      // args '<docker run args>'   // ⚠️ Do NOT put Python flags here; leave empty unless you need Docker-specific args
+      image 'python:3.11-slim'
     }
   }
 
@@ -14,10 +13,14 @@ pipeline {
   }
 
   environment {
-    PYTHONUNBUFFERED = '1'          // unbuffered Python output (instead of args '-u')
+    PYTHONUNBUFFERED = '1'
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
     PIP_NO_CACHE_DIR = '1'
-    SKIP_DB = '1'                   // used by your tests to skip DB
+    SKIP_DB = '1'
+
+    GITHUB_OWNER      = 'Abhinash0702'
+    GITHUB_REPO       = 'DevOps_CaseStudy'
+    GITHUB_TOKEN_CRED = 'jenkins-github-access'
   }
 
   stages {
@@ -47,7 +50,7 @@ pipeline {
       }
     }
 
-    stage('Run Tests (skip DB)') {
+    stage('Run Tests') {
       steps {
         dir('app') {
           sh '''
@@ -58,17 +61,28 @@ pipeline {
         }
       }
     }
-  }
+
+    stage('Approval (PR only)') {
+      when { expression { return env.CHANGE_ID } }
+      steps {
+        input message: "Approve merging PR #${env.CHANGE_ID} into ${env.CHANGE_TARGET}?",
+              ok: "Approve & Merge"
+      }
+    }
+  }  // ✅ CLOSE stages block here
 
   post {
     success {
-      echo '✅ Python code validated successfully (DB skipped in CI).'
+      echo '✅ Python code validated successfully.'
+      
+     echo '✅ Merge successful. Triggering deployment job...'
+    build job: 'Deploy-CaseStudy', wait: false
+
     }
     failure {
       echo '❌ Validation failed. Check the stage logs above.'
     }
     always {
-      // Guard cleanWs to avoid "MissingContextVariableException" if node/workspace wasn't allocated
       script {
         try {
           cleanWs()
