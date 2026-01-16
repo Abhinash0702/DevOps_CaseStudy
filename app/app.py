@@ -43,6 +43,7 @@ init_db_if_needed()
 
 
 @app.route('/', methods=['GET'])
+
 def addusers_form():
     return """
         <!doctype html>
@@ -50,11 +51,19 @@ def addusers_form():
           <head><title>Add User</title></head>
           <body>
             <h2>Add User</h2>
+
             /submituser
-              <label>Name: <input type="text" name="name" required></label><br><br>
-              <label>Email: <input type="email" name="email" required></label><br><br>
+              <label>Name:
+                <input type="text" name="name" required>
+              </label><br><br>
+
+              <label>Email:
+                <input type="email" name="email" required>
+              </label><br><br>
+
               <input type="submit" value="Add User">
             </form>
+
             <p>/usersView all users (JSON)</a></p>
           </body>
         </html>
