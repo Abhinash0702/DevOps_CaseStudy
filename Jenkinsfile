@@ -50,7 +50,7 @@ pipeline {
       }
     }
 
-    stage('Run Tests (skip DB)') {
+    stage('Run Tests') {
       steps {
         dir('app') {
           sh '''
@@ -73,7 +73,10 @@ pipeline {
 
   post {
     success {
-      echo '✅ Python code validated successfully (DB skipped in CI).'
+      echo '✅ Python code validated successfully.'
+      echo '✅ Merge successful. Triggering deployment job...'
+      build job: 'Deploy-CaseStudy', wait: false
+
     }
     failure {
       echo '❌ Validation failed. Check the stage logs above.'
