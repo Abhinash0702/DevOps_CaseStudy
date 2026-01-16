@@ -41,54 +41,92 @@ def init_db_if_needed():
 # Initialize DB only if not skipping
 init_db_if_needed()
 
+
 @app.route('/', methods=['GET'])
 def addusers_form():
-    return '''
-        <h2>Add User</h2>
-        /submituser
-            Name: <input type="text" name="name"><br><br>
-            Email: <input type="email" name="email"><br><br>
-            <input type="submit" value="Add User">
-        </form>
-    '''
+    return """
+        <!doctype html>
+        <html>
+          <head><title>Add User</title></head>
+          <body>
+            <h2>Add User</h2>
+            /submituser
+              <label>Name: <input type="text" name="name" required></label><br><br>
+              <label>Email: <input type="email" name="email" required></label><br><br>
+              <input type="submit" value="Add User">
+            </form>
+            <p>/usersView all users (JSON)</a></p>
+          </body>
+        </html>
+    """
 
 @app.route('/submituser', methods=['POST'])
 def submit_user():
-    name = request.form.get('name', '').strip()
-    email = request.form.get('email', '').strip()
+    name = (request.form.get('name') or '').strip()
+    email = (request.form.get('email') or '').strip()
+
+    if not name or not email:
+        return (
+            """
+            <p>Name and Email are required.</p>
+            <p>/Go back</a></p>
+            """,
+            400,
+        )
 
     if SKIP_DB:
         # Demo/CI mode: do not hit DB
-        return f'<p>Demo mode: User {name} would be added!</p>/Add another</a>'
+        return f"""
+            <p>Demo mode: User <strong>{name}</strong> would be added!</p>
+            <p>/Add another</a></p>
+        """
 
-    conn = mysql.connector.connect(**db_config)
     try:
+        conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute('INSERT INTO users (name, email) VALUES (%s, %s)', (name, email))
         conn.commit()
-    finally:
         cursor.close()
         conn.close()
+    except Error as e:
+        app.logger.error(f"Insert failed: {e}")
+        return (
+            f"""
+            <p>Failed to add user due to a database error.</p>
+            <pre>{e}</pre>
+            <p>/Go back</a></p>
+            """,
+            500,
+        )
 
-    return f'<p>User {name} added successfully!</p>/Add another</a>'
+    return f"""
+        <p>User <strong>{name}</strong> added successfully!</p>
+        <p>/Add another</a></p>
+        <p>/usersView users</a></p>
+    """
 
 @app.route('/users', methods=['GET'])
 def get_users():
-OBOBOBOB    if SKIP_DB:
+    if SKIP_DB:
         # Demo/CI mode: return empty list
-OBOB        return jsonify([])
-OBOB
-    conn = mysql.connector.connect(**db_config)
-OB    try:
-OBOB        cursor = conn.cursor()
-OBOBOBOB        cursor.execute('SELECT id, name, email FROM users')
-OBOB        users = [{"id": row[0], "name": row[1], "email": row[2]} for row in cursor.fetchall()]
-OB    finally:
-OBOB        cursor.close()
-OBOB        conn.close()
-OBOBOB
+        return jsonify([])
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, email FROM users')
+        users = [{"id": row[0], "name": row[1], "email": row[2]} for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+    except Error as e:
+        app.logger.error(f"Select failed: {e}")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+
     return jsonify(users)
 
-OBOBif __name__ == '__main__':
-    # Only for local dev runs; in production use a WSGI server
-OBOBOBOBOBOBOBOB    app.run(host='0.0.0.0', port=5000)
+if __name__ == '__main__':
+    # Only for local dev runs; in production use a WSGI server (gunicorn/uwsgi)
+    app.run(host='0.0.0.0', port=5000)
+
+
+
