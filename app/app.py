@@ -73,7 +73,7 @@ def submit_user():
     conn.close()
     return f'<p>User {name} added successfully!</p><a href="/">Add another</a>'
 
-
+#test
 
 @app.route('/users', methods=['GET'])
 def get_users():
